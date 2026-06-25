@@ -1,0 +1,271 @@
+name: Merge on CODEOWNER comment
+
+on:
+  issue_comment:
+    types:
+      - created
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  merge:
+    if: >-
+      github.event.issue.pull_request != null &&
+      github.event.comment.body == '.merge'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create loading status comment
+        id: status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pullNumber = context.payload.issue.number;
+            const body = `<!-- merge-status -->\nLoading: checking permissions and merging PR #${pullNumber}...`;
+
+            const { data: comment } = await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pullNumber,
+              body,
+            });
+
+            core.setOutput('comment_id', String(comment.id));
+
+      - name: Load pull request details
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const commenter = context.payload.comment.user.login;
+            const pullNumber = context.payload.issue.number;
+
+            const { data: codeownersFile } = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: '.github/CODEOWNERS',
+            });
+
+            const content = Buffer.from(codeownersFile.content, codeownersFile.encoding).toString('utf8');
+            const owners = [...content.matchAll(/@([A-Za-z0-9-]+)/g)].map((match) => match[1]);
+
+            const { data: pull } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+            });
+
+            const mergeAllowed = owners.includes(commenter) && !pull.merged;
+            const failureMessage = !owners.includes(commenter)
+              ? `Only CODEOWNERS can use .merge. Received: ${commenter}`
+              : `PR #${pullNumber} is already merged.`;
+
+            core.setOutput('number', String(pullNumber));
+            core.setOutput('head_ref', pull.head.ref);
+            core.setOutput('base_ref', pull.base.ref);
+            core.setOutput('author', pull.user.login);
+            core.setOutput('head_repo_full_name', pull.head.repo.full_name);
+            core.setOutput('merge_allowed', mergeAllowed ? 'true' : 'false');
+            core.setOutput('failure_message', failureMessage);
+
+      - name: Fail if the commenter is not a CODEOWNER
+        if: steps.pr.outputs.merge_allowed != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const statusCommentId = Number('${{ steps.status.outputs.comment_id }}');
+            const message = '${{ steps.pr.outputs.failure_message }}';
+
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: statusCommentId,
+              body: `<!-- merge-status -->\nError: ${message}`,
+            });
+
+            core.setFailed(message);
+
+      - name: Check out the base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.base_ref }}
+          fetch-depth: 0
+
+      - name: Determine next release version
+        id: version
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+
+          current_version="$(node -p "require('./package.json').version")"
+          previous_tag="$(git tag --list 'v*' --sort=-v:refname | head -n 1 || true)"
+
+          if [[ "$current_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+          else
+            echo "Unsupported package.json version: $current_version" >&2
+            exit 1
+          fi
+
+          next_minor="$((minor + 1))"
+          next_version="${major}.${next_minor}.0"
+          release_tag="v${next_version}"
+
+          echo "version=$next_version" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "previous_tag=$previous_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Merge the pull request as a bot commit
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PR_BASE_REF: ${{ steps.pr.outputs.base_ref }}
+          PR_AUTHOR: ${{ steps.pr.outputs.author }}
+          NEXT_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin "pull/${PR_NUMBER}/head:pr-${PR_NUMBER}"
+          git checkout "${PR_BASE_REF}"
+          git merge --no-ff --no-commit "pr-${PR_NUMBER}"
+
+          if [ -f package.json ]; then
+            node -e 'const fs = require("fs"); const path = "package.json"; const nextVersion = process.env.NEXT_VERSION; const packageJson = JSON.parse(fs.readFileSync(path, "utf8")); packageJson.version = nextVersion; fs.writeFileSync(path, `${JSON.stringify(packageJson, null, 2)}\n`);'
+            git add package.json
+          fi
+
+          git commit --author="github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>" -m "merge: PR #${PR_NUMBER} by ${PR_AUTHOR}"
+          git push origin "HEAD:${PR_BASE_REF}"
+
+          git tag -a "${RELEASE_TAG}" -m "release: ${RELEASE_TAG}"
+          git push origin "${RELEASE_TAG}"
+
+      - name: Create GitHub release
+        uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
+          PREVIOUS_TAG: ${{ steps.version.outputs.previous_tag }}
+        with:
+          script: |
+            const { execSync } = require('child_process');
+
+            const releaseTag = process.env.RELEASE_TAG;
+            const previousTag = process.env.PREVIOUS_TAG;
+            const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
+            const range = previousTag ? `${previousTag}..HEAD` : 'HEAD';
+            const logOutput = execSync(
+              `git log --no-merges --reverse --pretty=format:%H%x09%s ${range}`,
+              { encoding: 'utf8' }
+            ).trim();
+
+            const headingMap = {
+              feat: 'Features',
+              deps: 'Dependencies',
+              fix: 'Fixes',
+              docs: 'Documentation',
+              chore: 'Chores',
+              refactor: 'Refactors',
+              perf: 'Performance',
+              test: 'Tests',
+              build: 'Build',
+              ci: 'CI',
+              style: 'Style',
+              revert: 'Reverts',
+            };
+
+            const groupedCommits = new Map();
+
+            if (logOutput) {
+              for (const line of logOutput.split('\n')) {
+                if (!line) {
+                  continue;
+                }
+
+                const [sha, subject] = line.split('\t');
+                const match = subject.match(/^([a-z]+)(?:\([^)]+\))?:\s*(.+)$/i);
+                const type = match ? match[1].toLowerCase() : 'other';
+                const message = match ? match[2].trim() : subject.trim();
+                const heading = headingMap[type] || `${type.charAt(0).toUpperCase()}${type.slice(1)}`;
+                const commitUrl = `${repoUrl}/commit/${sha}`;
+                const entry = `- ${type}: ${message} (${sha.slice(0, 7)} [commit](${commitUrl}))`;
+
+                if (!groupedCommits.has(heading)) {
+                  groupedCommits.set(heading, []);
+                }
+
+                groupedCommits.get(heading).push(entry);
+              }
+            }
+
+            const bodyLines = [];
+            for (const [heading, entries] of groupedCommits) {
+              if (entries.length === 0) {
+                continue;
+              }
+
+              bodyLines.push(`## ${heading}:`, '', ...entries, '');
+            }
+
+            const body = bodyLines.join('\n').trim() || `Release ${releaseTag}`;
+
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: releaseTag,
+              name: releaseTag,
+              body,
+              make_latest: 'true',
+              draft: false,
+              prerelease: false,
+            });
+
+      - name: Mark the merge as failed
+        if: failure() && steps.pr.outputs.merge_allowed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const statusCommentId = Number('${{ steps.status.outputs.comment_id }}');
+            const pullNumber = Number('${{ steps.pr.outputs.number }}');
+
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: statusCommentId,
+              body: `<!-- merge-status -->\nError: merge failed for PR #${pullNumber}. Check the [workflow logs](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}).`,
+            });
+
+            core.setFailed(`Merge failed for PR #${pullNumber}.`);
+
+      - name: Close the PR
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pullNumber = Number('${{ steps.pr.outputs.number }}');
+            const headRef = '${{ steps.pr.outputs.head_ref }}';
+            const statusCommentId = Number('${{ steps.status.outputs.comment_id }}');
+            const headRepoFullName = '${{ steps.pr.outputs.head_repo_full_name }}';
+            const baseRepoFullName = `${context.repo.owner}/${context.repo.repo}`;
+
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: statusCommentId,
+              body: `<!-- merge-status -->\nMerged PR #${pullNumber} by ${context.payload.comment.user.login}. Tagged as ${{ steps.version.outputs.release_tag }}.`,
+            });
+
+            if (headRepoFullName === baseRepoFullName) {
+              try {
+                await github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `heads/${headRef}`,
+                });
+              } catch (error) {
+                core.warning(`Merged, but branch deletion failed: ${error.message}`);
+              }
+            }
