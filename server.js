@@ -64,6 +64,13 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = decodeURIComponent(url.pathname);
 
+  // Serve favicon – redirect to TarkovLab logo CDN
+  if (pathname === '/favicon.ico') {
+    res.writeHead(302, { Location: 'https://logo.tarkovlab.org/tl-icon' });
+    res.end();
+    return;
+  }
+
   // Serve index at /
   if (pathname === '/' || pathname === '') {
     serveIndex(res);
