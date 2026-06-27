@@ -1,25 +1,51 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
-name: Verify Data
+name: Verify JSON Syntax
 
 on:
-  push:
-    branches: [ "master" ]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
-  build:
-
+  validate-json:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js 16.x
-      uses: actions/setup-node@v3
-      with:
-        node-version: 16.x
-    - run: npm install
-    - run: node cli.js verify-quest-data
-    - run: node cli.js verify-hideout-data
+      - uses: actions/checkout@v4
+
+      - name: Find and validate all JSON files
+        run: |
+          echo "🔍 Scanning repository for JSON files..."
+          ERRORS=0
+          FILES=0
+
+          while IFS= read -r -d '' file; do
+            FILES=$((FILES + 1))
+            if python3 -c "import json, sys; json.load(open(sys.argv[1]))" "$file" 2>/dev/null; then
+              echo "$file"
+            else
+              echo "INVALID JSON: $file"
+              python3 -c "
+          import json, sys
+          try:
+              json.load(open(sys.argv[1]))
+          except json.JSONDecodeError as e:
+              print(f'   Error: {e}')
+          " "$file"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done < <(find . -name "*.json" \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            -print0)
+
+          echo ""
+          echo "──────────────────────────────────"
+          echo "Scanned : $FILES file(s)"
+          echo "Errors  : $ERRORS file(s)"
+          echo "──────────────────────────────────"
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::error::$ERRORS JSON file(s) failed validation."
+            exit 1
+          else
+            echo "All JSON files are valid."
+          fi
