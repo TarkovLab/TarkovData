@@ -13,14 +13,14 @@ jobs:
 
       - name: Find and validate all JSON files
         run: |
-          echo "🔍 Scanning repository for JSON files..."
+          echo "Scanning repository for JSON files..."
           ERRORS=0
           FILES=0
 
           while IFS= read -r -d '' file; do
             FILES=$((FILES + 1))
             if python3 -c "import json, sys; json.load(open(sys.argv[1]))" "$file" 2>/dev/null; then
-              echo "$file"
+              echo "- $file"
             else
               echo "INVALID JSON: $file"
               python3 -c "
