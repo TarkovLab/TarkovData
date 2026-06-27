@@ -1,7 +1,7 @@
 <div align="center">
 
 <h1>
-  <img src="https://logo.tarkovlab.org/tl-data" alt="TarkovLab" width="300" height="250" style="vertical-align:middle;" />
+  <img src="https://logo.tarkovlab.org/tl-data" alt="TarkovLab" style="vertical-align:middle;" />
 </h1>
 
 <p>Community-maintained game data for <strong>Escape From Tarkov</strong>, powering tools built on the <a href="https://tarkovlab.org">TarkovLab</a> ecosystem.</p>
