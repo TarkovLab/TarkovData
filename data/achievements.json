@@ -2,13 +2,13 @@
   "data": {
     "achievements": [
       {
-        "id": "achievements-pmc_s_best_friend",
+        "id": "achievements-pmcs_best_friend",
         "gameId": "6512ea46f7a078264a4376e4",
         "name": "PMC's Best Friend",
         "description": "Survive and extract from Interchange through the Scav Co-Op extraction while playing as a PMC",
         "rarity": "Common",
         "normalizedRarity": "common",
-        "imageLink": "https://assets.tarkovlab.org/achievements/pmc_s_best_friend-icon.webp",
+        "imageLink": "https://assets.tarkovlab.org/achievements/pmcs_best_friend-icon.webp",
         "category": "raid",
         "PvPOnly": false
       },
