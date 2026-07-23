@@ -46,13 +46,13 @@
         "PvPOnly": false
       },
       {
-        "id": "achievements-u_succ",
+        "id": "achievements-usucc",
         "gameId": "65141b9859647d2cb3213ca2",
         "name": "U-SUCC",
         "description": "Eliminate 50 USEC PMC operatives",
         "rarity": "Common",
         "normalizedRarity": "common",
-        "imageLink": "https://assets.tarkovlab.org/achievements/u_succ-icon.webp",
+        "imageLink": "https://assets.tarkovlab.org/achievements/usucc-icon.webp",
         "category": "kill",
         "PvPOnly": false
       },
@@ -156,13 +156,13 @@
         "PvPOnly": false
       },
       {
-        "id": "achievements-all_wheel_drive",
+        "id": "achievements-allwheel_drive",
         "gameId": "675709bef4e2a2ce0f058f56",
         "name": "All-Wheel Drive",
         "description": "Resolve the issue with the BTR driver one way or another",
         "rarity": "Rare",
         "normalizedRarity": "rare",
-        "imageLink": "https://assets.tarkovlab.org/achievements/all_wheel_drive-icon.webp",
+        "imageLink": "https://assets.tarkovlab.org/achievements/allwheel_drive-icon.webp",
         "category": "quests",
         "PvPOnly": false
       },
@@ -211,13 +211,13 @@
         "PvPOnly": false
       },
       {
-        "id": "achievements-through_another_s_eyes",
+        "id": "achievements-through_anothers_eyes",
         "gameId": "6912145e52ddd29bf002d343",
         "name": "Through Another's Eyes",
         "description": "Discover what the cultists were really after",
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
-        "imageLink": "https://assets.tarkovlab.org/achievements/through_another_s_eyes-icon.webp",
+        "imageLink": "https://assets.tarkovlab.org/achievements/through_anothers_eyes-icon.webp",
         "category": "storyline",
         "PvPOnly": false
       },
@@ -322,25 +322,25 @@
         "hidden": true
       },
       {
-        "id": "achievements-chris_s_heir",
+        "id": "achievements-chriss_heir",
         "gameId": "6514174fb1c08b0feb216d73",
         "name": "Chris's Heir",
         "description": "Eliminate a PMC operative with a headshot from over 500 meters away while playing as a PMC",
         "rarity": "Common",
         "normalizedRarity": "common",
-        "imageLink": "https://assets.tarkovlab.org/achievements/chris_s_heir-icon.webp",
+        "imageLink": "https://assets.tarkovlab.org/achievements/chriss_heir-icon.webp",
         "category": "pvp",
         "PvPOnly": true,
         "hidden": true
       },
       {
-        "id": "achievements-john_s_heir",
+        "id": "achievements-johns_heir",
         "gameId": "651417d6ec10ff011f17cc31",
         "name": "John's Heir",
         "description": "Eliminate 4 PMC operatives with a headshot while using a pistol in a single raid while playing as a PMC",
         "rarity": "Common",
         "normalizedRarity": "common",
-        "imageLink": "https://assets.tarkovlab.org/achievements/john_s_heir-icon.webp",
+        "imageLink": "https://assets.tarkovlab.org/achievements/johns_heir-icon.webp",
         "category": "pvp",
         "PvPOnly": true,
         "hidden": true
@@ -394,13 +394,13 @@
         "hidden": true
       },
       {
-        "id": "achievements-that_s_what_she_said",
+        "id": "achievements-thats_what_she_said",
         "gameId": "65141e37cf2f1c285e606361",
         "name": "That's What She Said",
         "description": "Search the office in Factory while playing as a PMC",
         "rarity": "Common",
         "normalizedRarity": "common",
-        "imageLink": "https://assets.tarkovlab.org/achievements/that_s_what_she_said-icon.webp",
+        "imageLink": "https://assets.tarkovlab.org/achievements/thats_what_she_said-icon.webp",
         "category": "pvp",
         "PvPOnly": true,
         "hidden": true
@@ -490,13 +490,13 @@
         "hidden": true
       },
       {
-        "id": "achievements-u_turn",
+        "id": "achievements-uturn",
         "gameId": "6912156f3d597b2ef80a2209",
         "name": "U-Turn",
         "description": "Agree to the job only to change your mind after",
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
-        "imageLink": "https://assets.tarkovlab.org/achievements/u_turn-icon.webp",
+        "imageLink": "https://assets.tarkovlab.org/achievements/uturn-icon.webp",
         "category": "pvp",
         "PvPOnly": false,
         "hidden": true
@@ -562,13 +562,13 @@
         "hidden": true
       },
       {
-        "id": "achievements-now_that_s_a_good_shot",
+        "id": "achievements-now_thats_a_good_shot",
         "gameId": "651413e9c31fcb0e163577c9",
         "name": "Now That's a Good Shot",
         "description": "Neutralize Zryachiy 15 times while playing as a PMC",
         "rarity": "Rare",
         "normalizedRarity": "rare",
-        "imageLink": "https://assets.tarkovlab.org/achievements/now_that_s_a_good_shot-icon.webp",
+        "imageLink": "https://assets.tarkovlab.org/achievements/now_thats_a_good_shot-icon.webp",
         "category": "pvp",
         "PvPOnly": true,
         "hidden": true
