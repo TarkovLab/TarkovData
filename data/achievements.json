@@ -497,7 +497,7 @@
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
         "imageLink": "https://assets.tarkovlab.org/achievements/uturn-icon.webp",
-        "category": "pvp",
+        "category": "storyline",
         "PvPOnly": false,
         "hidden": true
       },
