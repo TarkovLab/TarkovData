@@ -56,6 +56,7 @@ Every PR is automatically validated by the [JSON Syntax Check](.github/workflows
 
 - Originally created by **[Thaddeus](https://github.com/thaddeus)** as part of [TarkovTracker](https://github.com/TarkovTracker/tarkovdata)
 - Maintained and extended by the **[TarkovLab](https://tarkovlab.org)** community
+- Map SVGs in [`maps/`](maps/) are sourced from **[the-hideout/tarkov-dev-svg-maps](https://github.com/the-hideout/tarkov-dev-svg-maps)** and licensed under [CC BY-NC-SA 4.0](maps/LICENSE.md)
 
 <div align="center">
   <sub>Game content and materials are trademarks and copyrights of Battlestate Games and its licensors. All rights reserved.</sub>
