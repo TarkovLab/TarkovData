@@ -288,13 +288,13 @@
         "PvPOnly": false
       },
       {
-        "id": "achievements-i_m_on_a_boat",
+        "id": "achievements-im_on_a_boat",
         "gameId": "6a11d9028fd274eb6207c0bc",
         "name": "I’m on a Boat",
         "description": "Neutralize 4 members of The Wedge's squad while playing as a PMC",
         "rarity": "Common",
         "normalizedRarity": "common",
-        "imageLink": "https://assets.tarkovlab.org/achievements/i_m_on_a_boat-icon.webp",
+        "imageLink": "https://assets.tarkovlab.org/achievements/im_on_a_boat-icon.webp",
         "category": "boss",
         "PvPOnly": false
       },
