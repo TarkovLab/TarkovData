@@ -51,6 +51,32 @@ function serveIndex(res) {
   res.end(JSON.stringify({ server: 'data.tarkovlab.org', files }, null, 2));
 }
 
+function serveMapsApi(res) {
+  const files = [];
+
+  for (const entry of fs.readdirSync(MAPS_DIR, { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.svg')) {
+      files.push({
+        name: entry.name.replace(/\.svg$/, ''),
+        file: entry.name,
+        url: `/maps/${entry.name}`,
+        credit: 'the-hideout/tarkov-dev-svg-maps',
+        license: 'CC BY-NC-SA 4.0',
+        licenseUrl: '/maps/LICENSE.md',
+      });
+    }
+  }
+
+  files.sort((a, b) => a.name.localeCompare(b.name));
+
+  res.writeHead(200, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Access-Control-Allow-Origin': '*',
+    'Cache-Control': 'public, max-age=300',
+  });
+  res.end(JSON.stringify({ maps: files, attribution: 'Map SVGs sourced from the-hideout/tarkov-dev-svg-maps, licensed under CC BY-NC-SA 4.0.' }, null, 2));
+}
+
 const server = http.createServer((req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -70,6 +96,12 @@ const server = http.createServer((req, res) => {
   if (pathname === '/favicon.ico') {
     res.writeHead(302, { Location: 'https://logo.tarkovlab.org/tl-icon' });
     res.end();
+    return;
+  }
+
+  // Serve maps API
+  if (pathname === '/api/maps') {
+    serveMapsApi(res);
     return;
   }
 
