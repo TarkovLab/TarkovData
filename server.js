@@ -16,11 +16,13 @@ const MIME_TYPES = {
 };
 
 function resolvePath(pathname) {
-  // Try data/ first, then maps/
+  // try data/ first
   const inData = path.join(DATA_DIR, pathname);
   if (fs.existsSync(inData) && !fs.statSync(inData).isDirectory()) return inData;
 
-  const inMaps = path.join(MAPS_DIR, pathname);
+  // strip /maps/ prefix before looking in MAPS_DIR since it *is* the maps directory
+  const mapsRelative = pathname.replace(/^\/?maps\//, '');
+  const inMaps = path.join(MAPS_DIR, mapsRelative);
   if (fs.existsSync(inMaps) && !fs.statSync(inMaps).isDirectory()) return inMaps;
 
   return null;
