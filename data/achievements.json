@@ -449,7 +449,7 @@
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
         "imageLink": "https://assets.tarkovlab.org/achievements/man_of_his_word-icon.webp",
-        "category": "pvp",
+        "category": "storyline",
         "PvPOnly": false,
         "hidden": true
       },
@@ -461,7 +461,7 @@
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
         "imageLink": "https://assets.tarkovlab.org/achievements/just_business-icon.webp",
-        "category": "pvp",
+        "category": "storyline",
         "PvPOnly": false,
         "hidden": true
       },
@@ -473,7 +473,7 @@
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
         "imageLink": "https://assets.tarkovlab.org/achievements/enough_of_your_games-icon.webp",
-        "category": "pvp",
+        "category": "storyline",
         "PvPOnly": false,
         "hidden": true
       },
@@ -485,7 +485,7 @@
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
         "imageLink": "https://assets.tarkovlab.org/achievements/easy_way-icon.webp",
-        "category": "pvp",
+        "category": "storyline",
         "PvPOnly": false,
         "hidden": true
       },
@@ -509,7 +509,7 @@
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
         "imageLink": "https://assets.tarkovlab.org/achievements/will_it_blow-icon.webp",
-        "category": "pvp",
+        "category": "storyline",
         "PvPOnly": false,
         "hidden": true
       },
@@ -521,7 +521,7 @@
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
         "imageLink": "https://assets.tarkovlab.org/achievements/i_am_speed-icon.webp",
-        "category": "pvp",
+        "category": "storyline",
         "PvPOnly": false,
         "hidden": true
       },
@@ -533,7 +533,7 @@
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
         "imageLink": "https://assets.tarkovlab.org/achievements/better_served-icon.webp",
-        "category": "pvp",
+        "category": "storyline",
         "PvPOnly": false,
         "hidden": true
       },
@@ -545,7 +545,7 @@
         "rarity": "Legendary",
         "normalizedRarity": "legendary",
         "imageLink": "https://assets.tarkovlab.org/achievements/when_the_light_fades-icon.webp",
-        "category": "pvp",
+        "category": "storyline",
         "PvPOnly": false,
         "hidden": true
       },
