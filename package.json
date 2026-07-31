@@ -6,7 +6,13 @@
   "scripts": {
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "verify-quest-data": "./cli.js verify-quest-data"
+    "verify-quest-data": "./cli.js verify-quest-data",
+    "build:lighthouse": "node jobs/build_lighthouse.js",
+    "build:quests": "node jobs/build_quests.js",
+    "build:items": "node jobs/build_items.js",
+    "build:traders": "node jobs/build_traders.js",
+    "build:hideout": "node jobs/build_hideout.js",
+    "build:all": "node jobs/build_items.js && node jobs/build_traders.js && node jobs/build_hideout.js && node jobs/build_quests.js && node jobs/build_lighthouse.js"
   },
   "repository": {
     "type": "git",
