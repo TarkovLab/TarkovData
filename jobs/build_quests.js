@@ -21,6 +21,11 @@
  *
  *   node jobs/build_quests.js
  *   MAPS_DIR=../maps node jobs/build_quests.js
+ *
+ * Quest rewards (items, trader standing) are enriched from
+ * jobs/raw/pve_tasks.json (source: json.tarkov.dev pve/tasks), matched by
+ * normalizedName; reward items are resolved to catalog slugs via
+ * data/items.json.
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -30,6 +35,9 @@ const ROOT = path.join(HERE, '..');
 const MAPS_DIR = path.resolve(process.env.MAPS_DIR || path.join(ROOT, '..', 'maps'));
 const OUT_FILE = path.join(ROOT, 'data', 'quests.json');
 const BANNER_CACHE_FILE = path.join(HERE, 'raw', 'quest_banner_check.json');
+const RAW_TASKS_FILE = path.join(HERE, 'raw', 'pve_tasks.json');
+const ITEMS_FILE = path.join(ROOT, 'data', 'items.json');
+const TRADERS_FILE = path.join(ROOT, 'data', 'traders.json');
 const ASSETS_ORIGIN = 'https://assets.tarkovlab.org/quests';
 
 function questAssetName(name) {
@@ -48,6 +56,108 @@ function questAssetName(name) {
 function antifandomLink(wiki) {
   if (!wiki) return null;
   return wiki.replace('escapefromtarkov.fandom.com/wiki/', 'antifandom.com/escapefromtarkov/wiki/');
+}
+
+// Map of trader gameId -> trader slug id (e.g. "54cb57776803fa99248b456e" -> "prapor")
+function buildTraderGameIdMap() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(TRADERS_FILE, 'utf8'));
+    const traders = Array.isArray(raw) ? raw : raw.traders || [];
+    const map = new Map();
+    for (const t of traders) {
+      if (t.gameId) map.set(t.gameId, t.id || t.gameId);
+    }
+    return map;
+  } catch {
+    return new Map();
+  }
+}
+
+// Map of item gameId -> item slug id (e.g. "5aafbcd986f7745e590fff23" -> "medicine-case")
+function buildItemGameIdMap() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(ITEMS_FILE, 'utf8'));
+    const items = Array.isArray(raw) ? raw : raw.items || [];
+    const map = new Map();
+    for (const it of items) {
+      if (it.gameId) map.set(it.gameId, it.id || it.gameId);
+    }
+    return map;
+  } catch {
+    return new Map();
+  }
+}
+
+function normalizeQuestId(name) {
+  return String(name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Enrich quests with start/finish rewards from jobs/raw/pve_tasks.json.
+function enrichQuestsWithRewards(quests) {
+  if (!fs.existsSync(RAW_TASKS_FILE)) {
+    console.log('[build_quests] raw tasks file missing, skipping reward enrichment');
+    return quests;
+  }
+  let raw;
+  try {
+    raw = JSON.parse(fs.readFileSync(RAW_TASKS_FILE, 'utf8'));
+  } catch {
+    console.log('[build_quests] failed to parse raw tasks, skipping reward enrichment');
+    return quests;
+  }
+  const tasksDict = raw && raw.data && raw.data.tasks;
+  if (!tasksDict || typeof tasksDict !== 'object') {
+    console.log('[build_quests] unexpected raw tasks format, skipping reward enrichment');
+    return quests;
+  }
+
+  const itemIds = buildItemGameIdMap();
+  const traderIds = buildTraderGameIdMap();
+
+  const byNorm = new Map();
+  for (const q of quests) byNorm.set(q.id, q);
+
+  function resolveRewardItems(entries) {
+    const items = [];
+    for (const e of entries || []) {
+      if (!e || !e.item) continue;
+      const id = itemIds.get(e.item) || e.item;
+      const count = e.count != null ? e.count : 1;
+      items.push({ item: id, count });
+    }
+    return items;
+  }
+
+  function resolveTraderStanding(entries) {
+    const out = [];
+    for (const e of entries || []) {
+      if (!e || e.trader == null || e.standing == null) continue;
+      out.push({ trader: traderIds.get(e.trader) || e.trader, standing: e.standing });
+    }
+    return out;
+  }
+
+  let enriched = 0;
+  for (const task of Object.values(tasksDict)) {
+    const quest = byNorm.get(normalizeQuestId(task.normalizedName)) || byNorm.get(normalizeQuestId(task.name));
+    if (!quest) continue;
+    const finish = task.finishRewards || {};
+    const start = task.startRewards || {};
+    quest.startRewards = {
+      items: resolveRewardItems(start.items),
+      traderStanding: resolveTraderStanding(start.traderStanding),
+    };
+    quest.finishRewards = {
+      items: resolveRewardItems(finish.items),
+      traderStanding: resolveTraderStanding(finish.traderStanding),
+    };
+    enriched++;
+  }
+  console.log(`[build_quests] rewards enriched for ${enriched}/${quests.length} quests`);
+  return quests;
 }
 
 async function verifyBanners(quests) {
@@ -142,6 +252,8 @@ async function main() {
     if (q.imageLink && cache[q.imageLink] === false) q.imageLink = null;
   }
 
+  enrichQuestsWithRewards(quests);
+
   const out = {
     meta: {
       source: 'maps/quests.json (json.tarkov.dev regular/tasks + maps/traders/items catalogs)',
@@ -176,7 +288,11 @@ function slugify(name) {
     .replace(/^-+|-+$/g, '');
 }
 
-main().catch((err) => {
-  console.error('[build_quests] failed:', err);
-  process.exit(1);
-});
+module.exports = { enrichQuestsWithRewards };
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('[build_quests] failed:', err);
+    process.exit(1);
+  });
+}
