@@ -38,6 +38,36 @@
 This repository is a **fork of [TarkovTracker/tarkovdata](https://github.com/TarkovTracker/tarkovdata)**, originally created by [Thaddeus](https://github.com/thaddeus), and adapted for use within the [TarkovLab](https://tarkovlab.org) ecosystem.
 
 
+## Data jobs
+
+`data/` files that come from the game's own files are produced by **jobs** in [`jobs/`](jobs/), which
+ingest the ATLAS extraction pipeline output and project it onto the map SVGs.
+
+| Job | Produces | Inputs |
+| --- | -------- | ------ |
+| [`jobs/build_lighthouse.js`](jobs/build_lighthouse.js) | `data/lighthouse.json` | ATLAS `eft_assets/lighthouse/` (colliders, interactables, lights) + `maps/data/lighthouse.json` (objectives/extracts) |
+| [`jobs/build_quests.js`](jobs/build_quests.js) | `data/quests.json` | `maps/quests.json` (raw quest catalog) |
+
+Run a job with `npm run build:<name>` (e.g. `npm run build:lighthouse`, `npm run build:quests`). Input
+paths are resolved relative to the repository layout (`../atlas/eft_assets/<map>`, `../maps`); override
+with `ATLAS_DIR` / `MAPS_DIR` environment variables.
+
+### `data/quests.json`
+
+Full quest catalog (501 quests) served to tarkovlab-api. Each quest carries:
+
+- `id` — public slug (`normalizedName`, e.g. `shooting-cans`), used in `/quests/:id` URLs
+- `gameId` — the original game object id (hex string)
+- `name`, `normalizedName`, `trader`, `map`, `minPlayerLevel`, `kappa`, `lightkeeper`, `faction`,
+  `experience`, `wiki`
+- `objectives[]` — `id`, `type` (`mark`, `visit`, `plantItem`, `shoot`, ...), `description`,
+  `optional`, and `locations[]` with per-map SVG projection (`xPct`/`yPct`, pixel `x`/`y`),
+  `world` coordinates, `level` and `outline` polygons
+
+`build_lighthouse.js` links every objective to its quest page by adding `questSlug` (matched via the
+game object id), so map markers can deep-link to `/quests/:id`.
+
+
 ## Contributing
 
 Contributions are welcome! To get started:
