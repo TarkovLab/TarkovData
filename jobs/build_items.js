@@ -99,6 +99,7 @@ function main() {
       name,
       shortName,
       types: Array.isArray(it.types) ? it.types : [],
+      backgroundColor: it.backgroundColor || 'default',
       weight: it.weight != null ? it.weight : null,
       width: it.width != null ? it.width : null,
       height: it.height != null ? it.height : null,
@@ -199,6 +200,7 @@ function main() {
       idFormat: 'slug (normalized name); gameId holds the original game object id',
       notes: {
         imageLink: 'https://assets.tarkovlab.org/items/<shortName slug>-icon.webp; fallbackIconLink is the tarkov.dev asset keyed by gameId',
+        backgroundColor: 'EFT inventory slot color name (black/blue/green/grey/orange/red/violet/yellow/default) used for tile backgrounds',
         neededFor: 'quests/barters/crafts entries referencing this item, with the required count',
       },
     },
