@@ -128,6 +128,32 @@ function main() {
     itemMap.set(gameId, item);
   }
 
+  // --- preset / variant links (weapon builds: base gun <-> presets) ---
+  const variantsByParent = new Map();
+  for (const item of items) {
+    const props = (rawItems[item.gameId] || {}).properties || {};
+    if (props.baseItem) {
+      const parent = itemMap.get(props.baseItem);
+      if (parent) {
+        item.baseItemId = parent.id;
+        if (!variantsByParent.has(parent.id)) variantsByParent.set(parent.id, []);
+        variantsByParent.get(parent.id).push(item.id);
+      }
+    }
+    if (props.defaultPreset) {
+      const preset = itemMap.get(props.defaultPreset);
+      if (preset) item.defaultPresetId = preset.id;
+    }
+    if (/ (Name|ShortName)$/.test(item.name || '') && / (Name|ShortName)$/.test(item.shortName || '')) {
+      item.name = null;
+      item.shortName = null;
+    }
+  }
+  for (const [parentId, variantIds] of variantsByParent) {
+    const parent = items.find((i) => i.id === parentId);
+    if (parent) parent.variants = variantIds;
+  }
+
   const resolve = (gameId) => itemMap.get(gameId) || null;
 
   // --- quests (pve_tasks objectives -> quests.json) ---
