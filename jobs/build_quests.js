@@ -38,6 +38,7 @@ const BANNER_CACHE_FILE = path.join(HERE, 'raw', 'quest_banner_check.json');
 const RAW_TASKS_FILE = path.join(HERE, 'raw', 'pve_tasks.json');
 const ITEMS_FILE = path.join(ROOT, 'data', 'items.json');
 const TRADERS_FILE = path.join(ROOT, 'data', 'traders.json');
+const HIDEOUT_FILE = path.join(ROOT, 'data', 'hideout.json');
 const ASSETS_ORIGIN = 'https://assets.tarkovlab.org/quests';
 
 function questAssetName(name) {
@@ -66,6 +67,21 @@ function buildTraderGameIdMap() {
     const map = new Map();
     for (const t of traders) {
       if (t.gameId) map.set(t.gameId, t.id || t.gameId);
+    }
+    return map;
+  } catch {
+    return new Map();
+  }
+}
+
+// Map of hideout station gameId -> station slug id (e.g. "5d484fda654e7600681d9315" -> "workbench")
+function buildStationGameIdMap() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(HIDEOUT_FILE, 'utf8'));
+    const stations = Array.isArray(raw) ? raw : raw.stations || [];
+    const map = new Map();
+    for (const s of stations) {
+      if (s.gameId) map.set(s.gameId, s.id || s.gameId);
     }
     return map;
   } catch {
@@ -116,6 +132,7 @@ function enrichQuestsWithRewards(quests) {
 
   const itemIds = buildItemGameIdMap();
   const traderIds = buildTraderGameIdMap();
+  const stationIds = buildStationGameIdMap();
 
   const byNorm = new Map();
   for (const q of quests) byNorm.set(q.id, q);
@@ -140,6 +157,44 @@ function enrichQuestsWithRewards(quests) {
     return out;
   }
 
+  function resolveCraftUnlocks(entries) {
+    const out = [];
+    for (const e of entries || []) {
+      if (!e || !e.item) continue;
+      out.push({
+        station: stationIds.get(e.station) || e.station || null,
+        level: e.level != null ? e.level : 1,
+        item: itemIds.get(e.item) || e.item,
+        count: e.count != null ? e.count : 1,
+      });
+    }
+    return out;
+  }
+
+  function resolveTraderUnlocks(entries) {
+    const out = [];
+    for (const e of entries || []) {
+      if (!e || !e.item) continue;
+      out.push({
+        id: e.id || null,
+        level: e.level != null ? e.level : 1,
+        item: itemIds.get(e.item) || e.item,
+        count: e.count != null ? e.count : 1,
+        trader: traderIds.get(e.trader) || e.trader || null,
+      });
+    }
+    return out;
+  }
+
+  function resolveSkillLevelRewards(entries) {
+    const out = [];
+    for (const e of entries || []) {
+      if (!e || !e.skill) continue;
+      out.push({ skill: e.skill, level: e.level != null ? e.level : 1 });
+    }
+    return out;
+  }
+
   let enriched = 0;
   for (const task of Object.values(tasksDict)) {
     const quest = byNorm.get(normalizeQuestId(task.normalizedName)) || byNorm.get(normalizeQuestId(task.name));
@@ -149,10 +204,16 @@ function enrichQuestsWithRewards(quests) {
     quest.startRewards = {
       items: resolveRewardItems(start.items),
       traderStanding: resolveTraderStanding(start.traderStanding),
+      craftUnlocks: resolveCraftUnlocks(start.craftUnlock),
+      traderUnlocks: resolveTraderUnlocks(start.offerUnlock),
+      skillLevelRewards: resolveSkillLevelRewards(start.skillLevelReward),
     };
     quest.finishRewards = {
       items: resolveRewardItems(finish.items),
       traderStanding: resolveTraderStanding(finish.traderStanding),
+      craftUnlocks: resolveCraftUnlocks(finish.craftUnlock),
+      traderUnlocks: resolveTraderUnlocks(finish.offerUnlock),
+      skillLevelRewards: resolveSkillLevelRewards(finish.skillLevelReward),
     };
     enriched++;
   }

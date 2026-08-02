@@ -93,8 +93,10 @@ function main() {
     const en = namesEn[gameId] || {};
     const name = en.name || null;
     const shortName = en.shortName || null;
+    const itemId = it.normalizedName || assetSlug(shortName) || gameId;
+    const assetBase = `https://assets.tarkovlab.org/items/${String(itemId).replace(/-/g, '_')}`;
     const item = {
-      id: it.normalizedName || assetSlug(shortName) || gameId,
+      id: itemId,
       gameId,
       name,
       shortName,
@@ -106,10 +108,10 @@ function main() {
       basePrice: it.basePrice != null ? it.basePrice : null,
       wikiLink: it.wikiLink || null,
       antifandomLink: antifandomLink(it.wikiLink),
-      imageLink: `https://assets.tarkovlab.org/items/${assetSlug(shortName)}-icon.webp`,
-      fallbackIconLink: it.iconLink || null,
-      gridImageLink: it.gridImageLink || null,
-      image512pxLink: it.image512pxLink || null,
+      imageLink: `${assetBase}-icon.webp`,
+      fallbackIconLink: it.iconLink ? `${assetBase}-icon.webp` : null,
+      gridImageLink: it.gridImageLink ? `${assetBase}-grid-image.webp` : null,
+      image512pxLink: it.image512pxLink ? `${assetBase}-512.webp` : null,
       sellToTrader: (it.sellToTrader || []).map((o) => ({
         trader: traderSlug(o.trader),
         price: o.priceRUB != null ? o.priceRUB : o.price,
